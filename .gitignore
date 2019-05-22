@@ -3,3 +3,6 @@ __pycache__/
 *.pyc
 testdata/
 arduino/*/.pioenvs/
+old_models/
+*.npz
+weight_file
