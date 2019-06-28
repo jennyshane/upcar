@@ -46,7 +46,7 @@ except serial.SerialException:
 try:
 	cam=camera()
 	cam.start_recording()
-	data_recorder=recorder("/home/jenny/test/test_camstream/data")
+	data_recorder=recorder("testdata")
 	with io_monitor(leds=ledstr, buttons=buttonstr, switches=switchstr) as monitor:
 		time.sleep(1)
 		monitor.set_led("status", 1)
