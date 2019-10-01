@@ -30,19 +30,19 @@ for f in files:
 			*word, STR, THR=struct.unpack('4Bii', chunk)
 			if word!=magic_word:
 				print("header word is wrong")
+				print(word)
 				break
 			else:
 				print(STR, THR)
 				#image_bytes=f_handle.read(120*160*3)
 				image_bytes=f_handle.read(424*240*3)
 				image=np.fromstring(image_bytes, np.uint8).reshape(240, 424, 3)
-				new_image=cv2.resize(image, (0, 0), fx=5, fy=5, interpolation=cv2.INTER_NEAREST)
+				new_image=cv2.resize(image, (0, 0), fx=2, fy=2, interpolation=cv2.INTER_NEAREST)
 				num_images=num_images+1
 				cv2.imshow("images", new_image)
 				cv2.waitKey(50)
 		else:
 			break
 	print(num_images)
-
 
 

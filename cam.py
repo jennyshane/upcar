@@ -3,6 +3,8 @@ import datetime
 import struct
 import threading
 import cv2
+import numpy as np
+import pyrealsense2 as rs
 from observer import *
 
 time_format='%Y-%m-%d_%H-%M-%S'
@@ -40,7 +42,7 @@ class recorder(object):
 		self.is_recording=False
 
 	def frame_callback(self, flag):
-		print("frame_callback:  "+str(time.time()))
+		#print("frame_callback:  "+str(time.time()))
 		#copy the data so we don't have to worry about it changing
 		self.current_data['lock'].acquire()	#ACQUIRE DATA LOCK
 		temp_data=self.current_data['data'].copy() 
@@ -65,7 +67,7 @@ class recorder(object):
 
 	def data_callback(self, flag):
 		if hasattr(flag, 'STR') and hasattr(flag, 'THR'):
-			print("data_callback:  "+str(time.time()))
+			#print("data_callback:  "+str(time.time()))
 			self.current_data['lock'].acquire()	#ACQUIRE DATA LOCK
 			self.current_data['data']={'time':time.time(), 'STR':flag.STR, 'THR':flag.THR}
 			self.current_data['lock'].release()	#RELEASE DATA LOCK
@@ -83,38 +85,30 @@ class camera(object):
 							       #Probably either publishers or subscribers should do this, but not both
 		self.camera_thread=threading.Thread(target=self.thread_func, args=[])
 		self.stop_event=threading.Event()
-		self.cam=cv2.VideoCapture(0)
-		self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 160)
-		self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 120)
-		self.framerate=.05;	#50 ms per frame- 20 fps
+		self.pipe=rs.pipeline()
+		self.config=rs.config()
+		self.config.enable_stream(rs.stream.color, 424, 240, rs.format.bgr8, 30)
+		self.profile=self.pipe.start(self.config)
+
 
 	def start_recording(self):
 		# start recording: start thread
 		print("camera start")
 		self.camera_thread.start()
-		
 
 	def stop_recording(self):
 		# stop recording: set stop flag and join
 		self.stop_event.set()
 		self.camera_thread.join()
-
-		
-	def set_framerate(self, framerate):
-		self.framerate=framerate;
+		self.pipe.stop()
 
 	def thread_func(self):
 		# get new image every 1/fps seconds, then create flag with image as argument
 		while not self.stop_event.isSet():
-			start=time.time()
-			ret, frame=self.cam.read()
-			if not ret:
-				print("error, didn't get a frame from camera")
-			else:
-				Flag("frame", {"image":frame.copy()})
-			stop=time.time()
-			if stop-start<self.framerate:
-				time.sleep(self.framerate-(stop-start))
+			frames=self.pipe.wait_for_frames()
+			color_frame=frames.get_color_frame()
+			color_image=np.asanyarray(color_frame.get_data())
+			Flag("frame", {"image":color_image.copy()})
 
 			
 
