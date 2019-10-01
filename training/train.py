@@ -42,11 +42,11 @@ time_string=trainstart.strftime(time_format)
 num_epochs=args.epochs#number of epochs to train over
 save_epochs=args.save_frequency#number of epochs between weight file saves
 
-dataset=drivingData(args.directories, 36, 20)
+dataset=drivingData(args.directories)
 
 ntrain=len(dataset)
 indices=list(range(ntrain))
-nval=int(ntrain*0.1)
+nval=int(ntrain*0.02)
 
 validation_idx=np.random.choice(ntrain, size=nval, replace=False)
 train_idx=list(set(indices)-set(validation_idx))
@@ -87,6 +87,9 @@ for epoch in range(num_epochs):
         loss=criterion(outputs, labels)
         val_loss+=loss
     print("Epoch {0}, validation loss={1}".format(epoch, val_loss/len(validation_loader)))
+    if epoch%save_epochs==0:
+        save_name="weight_file_epoch"+str(epoch)
+        torch.save(net.state_dict(), save_name)
 
         
     
