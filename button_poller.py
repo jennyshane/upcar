@@ -106,3 +106,31 @@ class io_monitor(object):
 		print("writing "+led)
 
 
+
+if __name__=="__main__":
+
+	ledstr={"data_collect":{"number":8}, "auto":{"number":10}, "status":{"number":12}}
+
+	with io_monitor(leds=ledstr, buttons=[], switches=[]) as monitor:
+		monitor.set_led("status", 1)
+		monitor.set_led("data_collect", 1)
+		monitor.set_led("auto", 1)
+		time.sleep(1)
+		monitor.set_led("status", 0)
+		monitor.set_led("data_collect", 0)
+		monitor.set_led("auto", 0)
+		time.sleep(1)
+		monitor.set_led("status", 1)
+		time.sleep(1)
+		monitor.set_led("status", 0)
+		time.sleep(1)
+		monitor.set_led("data_collect", 1)
+		time.sleep(1)
+		monitor.set_led("data_collect", 0)
+		time.sleep(1)
+		monitor.set_led("auto", 1)
+		time.sleep(1)
+		monitor.set_led("auto", 0)
+
+
+
