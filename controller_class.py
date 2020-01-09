@@ -4,8 +4,8 @@ import threading
 import time
 from observer import *
 
-button_names={0:'A', 1:'B', 2:'X', 3:'Y', 4:'LB', 5:'RB', 6:'screen', 7:'menu', 8:'xbox'}
-analog_names={0:'js1-x', 1:'js1-y', 2:'LT', 3:'js2-x', 4:'js2-y', 5:'RT', 6:'DPad-x', 7:'DPad-y'}
+button_names={0:'1', 1:'2', 2:'3', 3:'4', 4:'5', 5:'6', 6:'7', 7:'8', 8:'9', 9:'10'}
+analog_names={0:'js1-x', 1:'js1-y', 2:'js2-x', 3:'js2-y', 4:'DPad-x', 5:'DPad-y'}
 
 class joystick(object):
 	def __init__(self):
@@ -59,7 +59,7 @@ if __name__=="__main__":
 		Observer.observe(button+"_button", lambda event, button=button: print(button, event.value, event.time))
 
 	done=threading.Event()
-	Observer.observe("B_button", lambda event : done.set())
+	Observer.observe("3_button", lambda event : done.set())
 
 	with joystick() as js:
 		while not done.is_set():
