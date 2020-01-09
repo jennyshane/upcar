@@ -4,20 +4,34 @@ import os
 import time
 import serial
 import datetime
-import torch
+#import torch
+import mraa
 
 from controller_class import *
 from observer import *
 from cam import *
-from model import Net
+#from model import Net
+
+pin_blue=8
+pin_white=10
+pin_red=12
 
 def serial_write(serial_conn, speed, steer):
 	assert(len(data)==2)
 	sp_str=str(speed).zfill(3)
 	st_str=str(steer).zfill(3)
-	serial_conn.write((sp_str+","+st_str+"\n").encode(ascii))
+	print("writing ", speed, steer)
+	serial_conn.write((sp_str+","+st_str+"\n").encode("ascii"))
+
+def map_steering(value):
+	return int(70*(value-1000)/1000+50)
+
+def map_throttle(value):
+	return int(120*(value-1500)/500)
 
 
+
+'''
 class Driver(object):
 	def __init__(self, net, stats, serial_obj):
 		self.net=net
@@ -84,12 +98,13 @@ net=Net()
 net.load_state_dict(torch.load('weight_file', map_location='cpu'))
 net.eval()
 steer_stats=np.load("steerstats.npz")['arr_0']
+'''
 
 start_auto=False
 stop_auto=False
 
 THR_VAL=1537
-
+		
 data_collect_flag=threading.Event()
 autonomous_flag=threading.Event()
 
@@ -103,34 +118,54 @@ except serial.SerialException:
 		sys.exit()
 		
 try:
+	led_blue=mraa.Gpio(pin_blue)
+	led_blue.dir(mraa.DIR_OUT)
+	led_blue.write(0)
+	
+	led_white=mraa.Gpio(pin_white)
+	led_white.dir(mraa.DIR_OUT)
+	led_white.write(0)
+	
+	led_red=mraa.Gpio(pin_red)
+	led_red.dir(mraa.DIR_OUT)
+	led_red.write(0)
+
 	cam=camera()
 	cam.start_recording()
-	driver=Driver(net, steer_stats, ser)
+	#driver=Driver(net, steer_stats, ser)
 	data_recorder=recorder("testdata")
-	Observer.observe("A_button", lambda event : autonomous_flag.set() if event.value else None)
-	Observer.observe("B_button", lambda event : data_collect_flag.set() if event.value else None)
+	Observer.observe("3_button", lambda event : autonomous_flag.set() if event.value else None)
+	Observer.observe("2_button", lambda event : data_collect_flag.set() if event.value else None)
+	led_white.write(1)
 	with joystick() as js:
 		while True:
 			time.sleep(.01)
 			data=js.poll()
-			Flag("data", {"STR":data["STR"], "THR":data["THR"]})
+			steer_value=map_steering(data["STR"])
+			throttle_value=map_throttle(data["THR"])
+			Flag("data", {"STR":steer_value, "THR":throttle_value})
 			###This bit should go in a function that handles all the state changes based on serial and gpio input
 			if data_collect_flag.is_set():
 				data_collect_flag.clear()
 				if not data_recorder.status():
 					data_recorder.start()
+					led_blue.write(1)
 				else:
 					data_recorder.stop()
+					led_blue.write(0)
 			if autonomous_flag.is_set():
 				autonomous_flag.clear()
 				if not driver.status():
-					driver.start()
+					#driver.start()
+					led_red.write(1)
 				else:
-					driver.stop()
+					#driver.stop()
+					led_red.write(0)
 			time.sleep(.01)
-			if not driver.status(): 
-				serial_write(ser, data["STR"], data["THR"]
+			#if not driver.status(): 
+			serial_write(ser, steer_value, throttle_value)
 
 				
 finally:
 	cam.stop_recording
+	led_white.write(0)
