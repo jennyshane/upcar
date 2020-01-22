@@ -22,12 +22,13 @@ def serial_write(serial_conn, speed, steer):
 	st_str=str(steer).zfill(3)
 	print("writing ", speed, steer)
 	serial_conn.write((sp_str+","+st_str+"\n").encode("ascii"))
+	serial_conn.readline()
 
 def map_steering(value):
-	return int(70*(value-1000)/1000+50)
+	return int(70*(1000-(value-1000))/1000+50)
 
 def map_throttle(value):
-	return int(120*(value-1500)/500)
+	return int(510*(value-1000)/1000)
 
 
 
@@ -163,7 +164,7 @@ try:
 					led_red.write(0)
 			time.sleep(.01)
 			#if not driver.status(): 
-			serial_write(ser, steer_value, throttle_value)
+			serial_write(ser, throttle_value, steer_value)
 
 				
 finally:
